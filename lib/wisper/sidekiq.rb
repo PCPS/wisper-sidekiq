@@ -28,13 +28,22 @@ module Wisper
 
     def broadcast(subscriber, publisher, event, args)
       options = sidekiq_options(subscriber)
-      Worker.set(options).perform_in(42.seconds, ::YAML.dump([subscriber, event, args]))
+      interval = interval(subscriber)
+      if interval.zero?
+        Worker.set(options).perform_async(::YAML.dump([subscriber, event, args]))
+      else
+        Worker.set(options).perform_in(interval.seconds, ::YAML.dump([subscriber, event, args]))
+      end
     end
 
     private
 
     def sidekiq_options(subscriber)
       subscriber.respond_to?(:sidekiq_options) ? subscriber.sidekiq_options : {}
+    end
+
+    def interval(subscriber)
+      subscriber.respond_to?(:interval) ? subscriber.interval.to_i : 0
     end
   end
 end
