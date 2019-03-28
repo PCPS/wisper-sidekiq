@@ -27,16 +27,13 @@ module Wisper
     end
 
     def broadcast(subscriber, publisher, event, args)
-      puts "sub #{subscriber}"
-      puts "event #{event}"
-      puts "args #{args}"
       options = sidekiq_options(subscriber)
-      my_interval = interval(subscriber)
-      puts "had interval #{my_interval}"
-      if interval.zero?
+      job_delay = interval(subscriber)
+      puts "had interval #{job_delay}"
+      if job_delay.zero?
         Worker.set(options).perform_async(::YAML.dump([subscriber, event, args]))
       else
-        Worker.set(options).perform_in(my_interval.seconds, ::YAML.dump([subscriber, event, args]))
+        Worker.set(options).perform_in(job_delay.seconds, ::YAML.dump([subscriber, event, args]))
       end
     end
 
@@ -47,7 +44,7 @@ module Wisper
     end
 
     def interval(subscriber)
-      subscriber.respond_to?(:interval) ? subscriber.interval.to_i : 0
+      subscriber.respond_to?(:job_delay) ? subscriber.job_delay.to_i : 0
     end
   end
 end
