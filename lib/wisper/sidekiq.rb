@@ -29,7 +29,6 @@ module Wisper
     def broadcast(subscriber, publisher, event, args)
       options = sidekiq_options(subscriber)
       job_delay = interval(subscriber)
-      puts "had interval #{job_delay}"
       if job_delay.zero?
         Worker.set(options).perform_async(::YAML.dump([subscriber, event, args]))
       else
