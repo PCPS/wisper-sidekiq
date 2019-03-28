@@ -28,7 +28,7 @@ module Wisper
 
     def broadcast(subscriber, publisher, event, args)
       options = sidekiq_options(subscriber)
-      Worker.set(options).perform_async(::YAML.dump([subscriber, event, args]))
+      Worker.set(options).perform_in(42.seconds, ::YAML.dump([subscriber, event, args]))
     end
 
     private
