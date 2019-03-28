@@ -29,6 +29,7 @@ module Wisper
     def broadcast(subscriber, publisher, event, args)
       options = sidekiq_options(subscriber)
       interval = interval(subscriber)
+      puts "had interval #{interval}"
       if interval.zero?
         Worker.set(options).perform_async(::YAML.dump([subscriber, event, args]))
       else
